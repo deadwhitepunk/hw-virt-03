@@ -31,8 +31,9 @@ Hey, Netology
 - имя контейнера "ФИО-custom-nginx-t2"
 - контейнер работает в фоне
 - контейнер опубликован на порту хост системы 127.0.0.1:8080
-
+```sh
 docker run -d --name "zhelonkindd-custom-nginx-t2" -p 8080:80 custom-nginx:1.0.0
+```
 
 2. Не удаляя, переименуйте контейнер в "custom-nginx-t2"
 3. Выполните команду ```date +"%d-%m-%Y %T.%N %Z" ; sleep 0.150 ; docker ps ; ss -tlpn | grep 127.0.0.1:8080  ; docker logs custom-nginx-t2 -n1 ; docker exec -it custom-nginx-t2 base64 /usr/share/nginx/html/index.html```
@@ -123,7 +124,23 @@ services:
 
 И выполните команду "docker compose up -d". Какой из файлов был запущен и почему? (подсказка: https://docs.docker.com/compose/compose-application-model/#the-compose-file )
 
+Был запущен compose.yaml так как компоуз сначала запускает файл с названием compose.yaml, а потом все остальные
+
 2. Отредактируйте файл compose.yaml так, чтобы были запущенны оба файла. (подсказка: https://docs.docker.com/compose/compose-file/14-include/)
+
+compose.yaml:
+```sh
+version: "3"
+include:
+  - docker-compose.yml
+services:
+  portainer:
+    network_mode: host
+    image: portainer/portainer-ce:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+```
+
 
 3. Выполните в консоли вашей хостовой ОС необходимые команды чтобы залить образ custom-nginx как custom-nginx:latest в запущенное вами, локальное registry. Дополнительная документация: https://distribution.github.io/distribution/about/deploying/
 4. Откройте страницу "https://127.0.0.1:9000" и произведите начальную настройку portainer.(логин и пароль адмнистратора)
@@ -141,6 +158,27 @@ services:
 6. Перейдите на страницу "http://127.0.0.1:9000/#!/2/docker/containers", выберите контейнер с nginx и нажмите на кнопку "inspect". В представлении <> Tree разверните поле "Config" и сделайте скриншот от поля "AppArmorProfile" до "Driver".
 
 7. Удалите любой из манифестов компоуза(например compose.yaml).  Выполните команду "docker compose up -d". Прочитайте warning, объясните суть предупреждения и выполните предложенное действие. Погасите compose-проект ОДНОЙ(обязательно!!) командой.
+
+```sh
+❯ rm compose.yaml
+❯ docker compose up -d
+WARN[0000] /tmp/netology/docker/task5/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion 
+WARN[0000] Found orphan containers ([task5-portainer-1]) for this project. If you removed or renamed this service in your compose file, you can run this command with the --remove-orphans flag to clean it up. 
+[+] up 1/1
+ ✔ Container task5-registry-1 Running
+```
+
+ Докер говорит что есть контейнер-сирота:( в этом проекте, если вы поменяли имя данного сервиса или удалили его вы можете запустить команду с флагом --remove-orphans что бы убрать это
+ 
+```sh
+❯ docker-compose down --remove-orphans
+WARN[0000] /tmp/netology/docker/task5/docker-compose.yml: the attribute `version` is obsolete, it will be ignored, please remove it to avoid potential confusion 
+[+] down 3/3
+ ✔ Container task5-registry-1  Removed                                                                                                                                                                          0.6s
+ ✔ Container task5-portainer-1 Removed                                                                                                                                                                          0.8s
+ ✔ Network task5_default       Removed 
+```
+ Так как все эти контейнеры разворачивались из compose.yaml который мы удалили, то они все являются сиротами. Тем самым проект был удален.
 
 В качестве ответа приложите скриншоты консоли, где видно все введенные команды и их вывод, файл compose.yaml , скриншот portainer c задеплоенным компоузом.
 
